@@ -16,10 +16,6 @@ const generateRefreshToken = async (payload) => {
 };
 
 class AuthController {
-  async login(req, res) {
-    //
-  }
-
   async register(req, res) {
     try {
       if (!req.body.name) {
@@ -68,6 +64,48 @@ class AuthController {
       return res.status(200).json({
         status: true,
         message: "REGISTER_SUCCESS",
+        name: user.name,
+        email: user.email,
+        accessToken,
+        refreshToken,
+      });
+    } catch (error) {
+      return res.status(error.code || 500).json({
+        status: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async login(req, res) {
+    try {
+      if (!req.body.email) {
+        throw { code: 400, message: "EMAIL_IS_REQUIRED" };
+      }
+      if (!req.body.password) {
+        throw { code: 400, message: "PASSWORD_IS_REQUIRED" };
+      }
+
+      const user = await User.findOne({ email: req.body.email });
+      if (!user) {
+        throw { code: 404, message: "USER_NOT_FOUND" };
+      }
+
+      const isPasswordValid = await bcrypt.compare(
+        req.body.password,
+        user.password
+      );
+      if (!isPasswordValid) {
+        throw { code: 400, message: "INVALID_PASSWORD" };
+      }
+
+      const payload = { id: user._id, email: user.email, role: user.role };
+      const accessToken = await generateAccessToken(payload);
+      const refreshToken = await generateRefreshToken(payload);
+
+      return res.status(200).json({
+        status: true,
+        message: "LOGIN_SUCCESS",
         name: user.name,
         email: user.email,
         accessToken,
