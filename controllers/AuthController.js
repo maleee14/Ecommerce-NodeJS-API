@@ -62,8 +62,8 @@ class AuthController {
       }
 
       const payload = { id: user._id, email: user.email, role: user.role };
-      const accessToken = generateAccessToken(payload);
-      const refreshToken = generateRefreshToken(payload);
+      const accessToken = await generateAccessToken(payload);
+      const refreshToken = await generateRefreshToken(payload);
 
       return res.status(200).json({
         status: true,
