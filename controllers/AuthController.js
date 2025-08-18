@@ -88,7 +88,7 @@ class AuthController {
 
       const user = await User.findOne({ email: req.body.email });
       if (!user) {
-        throw { code: 404, message: "USER_NOT_FOUND" };
+        throw { code: 400, message: "INVALID_EMAIL_OR_PASSWORD" };
       }
 
       const isPasswordValid = await bcrypt.compare(
@@ -96,7 +96,7 @@ class AuthController {
         user.password
       );
       if (!isPasswordValid) {
-        throw { code: 400, message: "INVALID_PASSWORD" };
+        throw { code: 400, message: "INVALID_EMAIL_OR_PASSWORD" };
       }
 
       const payload = { id: user._id, email: user.email, role: user.role };
@@ -120,7 +120,45 @@ class AuthController {
   }
 
   async refreshToken(req, res) {
-    //
+    try {
+      if (!req.body.refreshToken) {
+        throw { code: 400, message: "REFRESH_TOKEN_IS_REQUIRED" };
+      }
+
+      const verify = jwt.verify(
+        req.body.refreshToken,
+        process.env.JWT_REFRESH_TOKEN_SECRET
+      );
+
+      let payload = { id: verify.id };
+
+      const accessToken = await generateAccessToken(payload);
+      const refreshToken = await generateAccessToken(payload);
+
+      return res.status(200).json({
+        status: true,
+        message: "REFRESH_TOKEN_SUCCESS",
+        accessToken,
+        refreshToken,
+      });
+    } catch (error) {
+      const errorJwt = [
+        "invalid signature",
+        "jwt malformed",
+        "jwt must be provided",
+        "invalid token",
+      ];
+
+      if (error.message == "jwt expired") {
+        error.message = "REFRESH_TOKEN_EXPIRED";
+      } else if (errorJwt.includes(error.message)) {
+        error.message = "INVALID_REFRESH_TOKEN";
+      }
+      return res.status(error.code || 500).json({
+        status: false,
+        message: error.message,
+      });
+    }
   }
 }
 
