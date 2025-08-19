@@ -19,11 +19,11 @@ class AuthController {
   async register(req, res) {
     try {
       isRequired(req.body.name, "name");
-      isRequired(req.body.email, "email");
-      isRequired(req.body.password, "password");
 
+      isRequired(req.body.email, "email");
       validateEmail(req.body.email);
 
+      isRequired(req.body.password, "password");
       minimumChar(req.body.password, 6, "password");
 
       const emailExist = await User.findOne({ email: req.body.email });
