@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Category from "../models/Category.js";
+import { isRequired } from "../libs/validator.js";
 
 class CategoryController {
   async index(req, res) {
@@ -24,9 +25,7 @@ class CategoryController {
 
   async store(req, res) {
     try {
-      if (!req.body.name) {
-        throw { code: 400, message: "NAME_IS_REQUIRED" };
-      }
+      isRequired(req.body.name, "name");
 
       const nameExists = await Category.findOne({ name: req.body.name });
       if (nameExists) {
@@ -95,9 +94,7 @@ class CategoryController {
         throw { code: 400, message: "INVALID_ID" };
       }
 
-      if (!req.body.name) {
-        throw { code: 400, message: "NAME_IS_REQUIRED" };
-      }
+      isRequired(req.body.name, "name");
 
       const nameExists = await Category.findOne({
         _id: { $ne: req.params.id },

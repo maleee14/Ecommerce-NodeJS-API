@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import { isRequired, validateEmail, minimumChar } from "../libs/validator.js";
 
 const generateAccessToken = async (payload) => {
   return jwt.sign(payload, process.env.JWT_ACCESS_TOKEN_SECRET, {
@@ -17,25 +18,13 @@ const generateRefreshToken = async (payload) => {
 class AuthController {
   async register(req, res) {
     try {
-      if (!req.body.name) {
-        throw { code: 400, message: "NAME_IS_REQUIRED" };
-      }
-      if (!req.body.email) {
-        throw { code: 400, message: "EMAIL_IS_REQUIRED" };
-      }
-      if (
-        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,3}$/.test(
-          req.body.email
-        ) === false
-      ) {
-        throw { code: 400, message: "INVALID_EMAIL" };
-      }
-      if (!req.body.password) {
-        throw { code: 400, message: "PASSWORD_IS_REQUIRED" };
-      }
-      if (req.body.password.lenght < 6) {
-        throw { code: 400, message: "PASSWORD_MINIMUM_6_CHARACTERS" };
-      }
+      isRequired(req.body.name, "name");
+      isRequired(req.body.email, "email");
+      isRequired(req.body.password, "password");
+
+      validateEmail(req.body.email);
+
+      minimumChar(req.body.password, 6, "password");
 
       const emailExist = await User.findOne({ email: req.body.email });
       if (emailExist) {
@@ -78,12 +67,8 @@ class AuthController {
 
   async login(req, res) {
     try {
-      if (!req.body.email) {
-        throw { code: 400, message: "EMAIL_IS_REQUIRED" };
-      }
-      if (!req.body.password) {
-        throw { code: 400, message: "PASSWORD_IS_REQUIRED" };
-      }
+      isRequired(req.body.email, "email");
+      isRequired(req.body.password, "password");
 
       const user = await User.findOne({ email: req.body.email });
       if (!user) {
@@ -120,9 +105,7 @@ class AuthController {
 
   async refreshToken(req, res) {
     try {
-      if (!req.body.refreshToken) {
-        throw { code: 400, message: "REFRESH_TOKEN_IS_REQUIRED" };
-      }
+      isRequired(req.body.refreshToken, "REFRESH_TOKEN");
 
       const verify = jwt.verify(
         req.body.refreshToken,
