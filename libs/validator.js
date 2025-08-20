@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+
 export const isRequired = (value, fieldName) => {
   if (value == undefined || value == null || value == "") {
     throw { code: 400, message: `${fieldName.toUpperCase()}_IS_REQUIRED` };
@@ -16,5 +19,16 @@ export const minimumChar = (value, num, fieldName) => {
       code: 400,
       message: `${fieldName.toUpperCase()}_MINIMUM_${num}_CHARACTERS`,
     };
+  }
+};
+
+export const removeImage = (filename, folder) => {
+  if (!filename) return; // kalau kosong, langsung keluar
+
+  const imagePath = path.join(process.cwd(), "images", folder, filename);
+
+  if (fs.existsSync(imagePath)) {
+    fs.unlinkSync(imagePath);
+    console.log(`Image ${filename} berhasil dihapus`);
   }
 };
