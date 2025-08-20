@@ -30,7 +30,7 @@ const upload = (folder) => {
     storage: storage,
     fileFilter: imageFilter,
     limits: { fileSize: 2 * 1024 * 1024 }, //2mb
-  });
+  }).single("image");
 };
 
 export default upload;

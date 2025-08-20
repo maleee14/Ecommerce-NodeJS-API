@@ -29,6 +29,5 @@ export const removeImage = (filename, folder) => {
 
   if (fs.existsSync(imagePath)) {
     fs.unlinkSync(imagePath);
-    console.log(`Image ${filename} berhasil dihapus`);
   }
 };

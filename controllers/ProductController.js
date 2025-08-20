@@ -60,9 +60,6 @@ class ProductController {
         throw { code: 409, message: "PRODUCT_ALREADY_EXISTS" };
       }
 
-      // if (!req.file) {
-      //   throw { code: 400, message: "INPUT_MUST_BE_IMAGE" };
-      // }
       const file = req.file;
       const imagePath = file ? file.filename : null;
 
