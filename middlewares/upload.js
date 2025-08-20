@@ -2,7 +2,7 @@ import multer from "multer";
 import fs from "fs";
 import path from "path";
 
-const imageUpload = (folder) => {
+const upload = (folder) => {
   const storage = multer.diskStorage({
     destination: function (req, file, cb) {
       const dir = path.join(process.cwd(), "images", folder);
@@ -33,4 +33,4 @@ const imageUpload = (folder) => {
   });
 };
 
-export default imageUpload;
+export default upload;
