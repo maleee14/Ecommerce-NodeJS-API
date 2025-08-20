@@ -126,6 +126,12 @@ class ProductController {
       }
 
       isRequired(req.body.name, "name");
+      isRequired(req.body.price, "price");
+
+      const category = await Category.findById(req.body.categoryId);
+      if (!category) {
+        throw { code: 404, message: "CATEGORY_NOT_FOUND" };
+      }
 
       const productExists = await Product.findOne({
         _id: { $ne: req.params.id },
@@ -135,28 +141,26 @@ class ProductController {
         throw { code: 409, message: "PRODUCT_ALREADY_EXISTS" };
       }
 
-      isRequired(req.body.price, "price");
-
       const product = await Product.findByIdAndUpdate(
         req.params.id,
         {
           categoryId: req.body.categoryId,
           name: req.body.name,
-          description: req.body.description,
+          description: req.body.description ?? null,
           price: req.body.price,
-          image: req.body.image,
+          image: req.body.image ?? null,
         },
         { new: true }
       );
 
-      await product.populate("categoryId");
-
       if (!product) {
-        throw { code: 500, message: "FAILED_UPDATE_PRODUCT" };
+        throw { code: 404, message: "PRODUCT_NOT_FOUND" };
       }
 
+      await product.populate("categoryId");
+
       return res.status(200).json({
-        status: false,
+        status: true,
         message: "SUCCESS_UPDATE_PRODUCT",
         product: productResponse(product),
       });

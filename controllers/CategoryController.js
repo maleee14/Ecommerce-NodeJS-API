@@ -111,7 +111,7 @@ class CategoryController {
       );
 
       if (!category) {
-        throw { code: 500, message: "FAILED_UPDATE_CATEGORY" };
+        throw { code: 404, message: "CATEGORY_NOT_FOUND" };
       }
 
       return res.status(200).json({
