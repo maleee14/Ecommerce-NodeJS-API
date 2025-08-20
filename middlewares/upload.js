@@ -13,7 +13,8 @@ const upload = (folder) => {
     },
     filename: function (req, file, cb) {
       const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-      cb(null, uniqueSuffix + "-" + file.originalname);
+      const safeName = file.originalname.replace(/\s+/g, "_").toLowerCase();
+      cb(null, uniqueSuffix + "_" + safeName);
     },
   });
 
@@ -30,7 +31,13 @@ const upload = (folder) => {
     storage: storage,
     fileFilter: imageFilter,
     limits: { fileSize: 2 * 1024 * 1024 }, //2mb
-  }).single("image");
+  });
 };
 
-export default upload;
+export const productImage = () => {
+  return upload("products").single("image");
+};
+
+export const profileImage = () => {
+  return upload("profiles").single("profile_image");
+};
