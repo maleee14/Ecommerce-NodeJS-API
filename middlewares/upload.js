@@ -34,10 +34,6 @@ const upload = (folder) => {
   });
 };
 
-export const productImage = () => {
-  return upload("products").single("image");
-};
+export const productImage = () => upload("products").single("image");
 
-export const profileImage = () => {
-  return upload("profiles").single("profile_image");
-};
+export const profileImage = () => upload("profiles").single("profile_image");
