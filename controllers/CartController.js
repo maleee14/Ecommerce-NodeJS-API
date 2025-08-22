@@ -97,7 +97,7 @@ class CartController {
     }
   }
 
-  async deletCart(req, res) {
+  async clearCart(req, res) {
     try {
       const cart = await Cart.findOneAndDelete({ userId: req.jwt.id });
       if (!cart) {
@@ -106,7 +106,7 @@ class CartController {
 
       return res.status(200).json({
         status: true,
-        message: "SUCCESS_DELETE_CART",
+        message: "SUCCESS_CLEAR_CART",
       });
     } catch (error) {
       return res.status(error.code || 500).json({
