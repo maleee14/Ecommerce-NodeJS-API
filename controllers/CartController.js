@@ -1,4 +1,3 @@
-import { populate } from "dotenv";
 import Cart from "../models/Cart.js";
 import { isRequired } from "../libs/validator.js";
 import mongoose from "mongoose";
@@ -19,10 +18,7 @@ const calculateTotalPrice = (cart) => {
 class CartController {
   async index(req, res) {
     try {
-      const cart = await Cart.find({ userId: req.jwt.id }).populate([
-        "userId",
-        "cartItems.product",
-      ]);
+      const cart = await Cart.find({ userId: req.jwt.id });
 
       if (!cart) {
         throw { code: 404, message: "CART_NOT_FOUND" };

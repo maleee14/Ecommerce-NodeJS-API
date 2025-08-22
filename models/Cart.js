@@ -33,4 +33,13 @@ const cartSchema = new mongoose.Schema({
   },
 });
 
+cartSchema.pre("find", function (next) {
+  this.populate({ path: "userId", select: "name email phone" }).populate({
+    path: "cartItems.product",
+    select: "name price description image",
+  });
+
+  next();
+});
+
 export default mongoose.model("Cart", cartSchema);
