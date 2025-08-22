@@ -7,19 +7,19 @@ import Product from "../models/Product.js";
 class CartController {
   async index(req, res) {
     try {
-      const carts = await Cart.find({ userId: req.jwt.id }).populate([
+      const cart = await Cart.find({ userId: req.jwt.id }).populate([
         "userId",
         "cartItems.product",
       ]);
 
-      if (!carts) {
+      if (!cart) {
         throw { code: 404, message: "CART_NOT_FOUND" };
       }
 
       return res.status(200).json({
         status: true,
         message: "FOUND_CART",
-        carts,
+        cart,
       });
     } catch (error) {
       return res.status(error.status || 500).json({
@@ -88,6 +88,25 @@ class CartController {
         status: true,
         message: "SUCCESS_ADD_TO_CART",
         cart,
+      });
+    } catch (error) {
+      return res.status(error.code || 500).json({
+        status: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async deletCart(req, res) {
+    try {
+      const cart = await Cart.findOneAndDelete({ userId: req.jwt.id });
+      if (!cart) {
+        throw { code: 404, message: "CART_IS_EMPTY" };
+      }
+
+      return res.status(200).json({
+        status: true,
+        message: "SUCCESS_DELETE_CART",
       });
     } catch (error) {
       return res.status(error.code || 500).json({

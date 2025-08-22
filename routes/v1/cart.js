@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.get("/", jwtAuth(), CartController.index);
 router.post("/", jwtAuth(), CartController.addToCart);
+router.delete("/", jwtAuth(), CartController.deletCart);
 
 export default router;
