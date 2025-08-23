@@ -55,7 +55,7 @@ class CartController {
 
       if (cart) {
         const itemIndex = cart.cartItems.findIndex(
-          (item) => item.product.toString() === req.body.product
+          (item) => item.product._id.toString() === req.body.product
         );
         if (itemIndex > -1) {
           cart.cartItems[itemIndex].quantity += req.body.quantity;
@@ -117,7 +117,7 @@ class CartController {
       }
 
       const itemIndex = cart.cartItems.findIndex(
-        (item) => item.product.toString() === req.params.productId
+        (item) => item.product._id.toString() === req.params.productId
       );
 
       if (itemIndex > -1) {
