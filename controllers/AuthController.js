@@ -190,9 +190,7 @@ class AuthController {
 
   async verifyEmail(req, res) {
     try {
-      if (!req.body.otp) {
-        throw { code: 400, message: "OTP_IS_REQUIRED" };
-      }
+      isRequired(req.body.otp, "otp");
 
       const user = await User.findById(req.jwt.id);
       if (!user) {
@@ -220,6 +218,87 @@ class AuthController {
       return res.status(200).json({
         status: true,
         message: "SUCCESS_VERIFY_EMAIL",
+      });
+    } catch (error) {
+      return res.status(error.code || 500).json({
+        status: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async sendResetPasswordOtp(req, res) {
+    try {
+      if (!req.body.email) {
+        throw { code: 400, message: "EMAIL_IS_REQUIRED" };
+      }
+
+      const user = await User.findOne({ email: req.body.email });
+      if (!user) {
+        throw { code: 404, message: "USER_NOT_FOUND" };
+      }
+
+      const otp = String(Math.floor(100000 + Math.random() * 900000));
+
+      user.resetPasswordOtp = otp;
+      user.resetPasswordOtpExpireAt = Date.now() + 15 * 60 * 1000; //15 menit
+      await user.save();
+
+      const mailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: user.email,
+        subject: "Reset password OTP",
+        text: `Your OTP is ${otp}. Use this OTP for reset your password account.`,
+      };
+
+      await transporter.sendMail(mailOptions);
+
+      return res.status(200).json({
+        status: true,
+        message: "SUCCESS_SEND_RESET_PASSWORD_OTP",
+      });
+    } catch (error) {
+      return res.status(error.code || 500).json({
+        status: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async resetPassword(req, res) {
+    try {
+      isRequired(req.body.email, "email");
+      isRequired(req.body.otp, "otp");
+      isRequired(req.body.newPassword, "new password");
+
+      const user = await User.findOne({ email: req.body.email });
+      if (!user) {
+        throw { code: 404, message: "USER_NOT_FOUND" };
+      }
+
+      if (
+        user.resetPasswordOtp === "" ||
+        user.resetPasswordOtp !== req.body.otp
+      ) {
+        throw { code: 409, message: "INVALID_OTP" };
+      }
+
+      if (user.resetPasswordOtpExpireAt < Date.now()) {
+        throw { code: 400, message: "OTP_EXPIRED" };
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash(req.body.newPassword, salt);
+
+      user.password = hash;
+      user.resetPasswordOtp = "";
+      user.resetPasswordOtpExpireAt = 0;
+
+      await user.save();
+
+      return res.status(200).json({
+        status: true,
+        message: "SUCCESS_RESET_PASSWORD",
       });
     } catch (error) {
       return res.status(error.code || 500).json({
