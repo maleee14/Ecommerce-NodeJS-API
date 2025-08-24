@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { isRequired, validateEmail, minimumChar } from "../libs/validator.js";
+import transporter from "../libs/nodemailer.js";
 
 const generateAccessToken = async (payload) => {
   return jwt.sign(payload, process.env.JWT_ACCESS_TOKEN_SECRET, {
@@ -48,6 +49,15 @@ class AuthController {
       const payload = { id: user._id, email: user.email, role: user.role };
       const accessToken = await generateAccessToken(payload);
       const refreshToken = await generateRefreshToken(payload);
+
+      const mailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: req.body.email,
+        subject: "Welcome to Express JS",
+        text: `Your account has been created with email: ${req.body.email}`, // plain‑text body
+      };
+
+      await transporter.sendMail(mailOptions);
 
       return res.status(200).json({
         status: true,
@@ -136,6 +146,82 @@ class AuthController {
       } else if (errorJwt.includes(error.message)) {
         error.message = "INVALID_REFRESH_TOKEN";
       }
+      return res.status(error.code || 500).json({
+        status: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async sendVerifyOtp(req, res) {
+    try {
+      const user = await User.findById(req.jwt.id);
+
+      if (user.is_verified) {
+        throw { code: 409, message: "EMAIL_HAS_BEEN_VERIFIED" };
+      }
+
+      const otp = String(Math.floor(100000 + Math.random() * 900000));
+
+      user.verifyOtp = otp;
+      user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000; //1 hari
+      await user.save();
+
+      const mailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: user.email,
+        subject: "Account Verify OTP",
+        text: `Your OTP is ${otp}. Verify your account use this OTP.`,
+      };
+
+      await transporter.sendMail(mailOptions);
+
+      return res.status(200).json({
+        status: true,
+        message: "SUCCESS_SEND_VERIFICATION_OTP",
+      });
+    } catch (error) {
+      return res.status(error.code || 500).json({
+        status: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async verifyEmail(req, res) {
+    try {
+      if (!req.body.otp) {
+        throw { code: 400, message: "OTP_IS_REQUIRED" };
+      }
+
+      const user = await User.findById(req.jwt.id);
+      if (!user) {
+        throw { code: 404, message: "USER_NOT_FOUND" };
+      }
+
+      if (user.is_verified) {
+        throw { code: 409, message: "EMAIL_HAS_BEEN_VERIFIED" };
+      }
+
+      if (user.verifyOtp === "" || user.verifyOtp !== req.body.otp) {
+        throw { code: 400, message: "INVALID_OTP" };
+      }
+
+      if (user.verifyOtpExpireAt < Date.now()) {
+        throw { code: 400, message: "OTP_EXPIRED" };
+      }
+
+      user.is_verified = true;
+      user.verifyOtp = "";
+      user.verifyOtpExpireAt = 0;
+
+      await user.save();
+
+      return res.status(200).json({
+        status: true,
+        message: "SUCCESS_VERIFY_EMAIL",
+      });
+    } catch (error) {
       return res.status(error.code || 500).json({
         status: false,
         message: error.message,
