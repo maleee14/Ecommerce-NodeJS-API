@@ -2,6 +2,7 @@ import Cart from "../models/Cart.js";
 import { isRequired } from "../libs/validator.js";
 import mongoose from "mongoose";
 import Product from "../models/Product.js";
+import { cartResponse } from "../utils/responseFormatter.js";
 
 const calculateTotalPrice = (cart) => {
   let totalPrice = 0;
@@ -24,10 +25,12 @@ class CartController {
         throw { code: 404, message: "CART_NOT_FOUND" };
       }
 
+      const result = cart.map((c) => cartResponse(c));
+
       return res.status(200).json({
         status: true,
         message: "FOUND_CART",
-        cart,
+        cart: result,
       });
     } catch (error) {
       return res.status(error.status || 500).json({
@@ -89,7 +92,7 @@ class CartController {
       return res.status(201).json({
         status: true,
         message: "SUCCESS_ADD_TO_CART",
-        cart,
+        cart: cartResponse(cart),
       });
     } catch (error) {
       return res.status(error.code || 500).json({
@@ -135,7 +138,7 @@ class CartController {
       return res.status(200).json({
         status: true,
         message: "SUCCESS_UPDATE_QUANTITY",
-        cart,
+        cart: cartResponse(cart),
       });
     } catch (error) {
       console.log(error);
@@ -170,7 +173,7 @@ class CartController {
       return res.status(200).json({
         status: true,
         message: "SUCCESS_DELETE_ITEM",
-        cart,
+        cart: cartResponse(cart),
       });
     } catch (error) {
       return res.status(error.code || 500).json({
