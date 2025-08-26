@@ -1,3 +1,22 @@
+export const userResponse = (user) => {
+  const address = user.address.map((a) => ({
+    id: a._id,
+    details: a.details,
+    street: a.street,
+    city: a.city,
+    zipCode: a.zipCode,
+  }));
+
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    profile_image: user.profile_image,
+    address: address ?? null,
+  };
+};
+
 export const productResponse = (product) => ({
   id: product._id,
   name: product.name,

@@ -27,6 +27,17 @@ const userSchema = new mongoose.Schema(
     profile_image: {
       type: String,
     },
+    address: {
+      type: [
+        {
+          details: String,
+          street: String,
+          city: String,
+          zipCode: String,
+        },
+      ],
+      default: [],
+    },
     verifyOtp: {
       type: String,
       default: "",
