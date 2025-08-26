@@ -19,6 +19,8 @@ router.delete(
   profileImage(),
   UserController.deleteImageProfile
 );
-router.post("/insert-address", jwtAuth(), UserController.insertAddress);
+router.post("/address", jwtAuth(), UserController.insertAddress);
+router.put("/address/:addressId", jwtAuth(), UserController.updateAddress);
+router.delete("/address/:addressId", jwtAuth(), UserController.removeAddress);
 
 export default router;

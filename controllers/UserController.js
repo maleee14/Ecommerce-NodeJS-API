@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { isRequired, removeImage } from "../libs/validator.js";
 import User from "../models/User.js";
 import { userResponse } from "../utils/responseFormatter.js";
@@ -146,7 +147,43 @@ class UserController {
 
   async updateAddress(req, res) {
     try {
-      //
+      isRequired(req.params.addressId, "address");
+      if (!mongoose.Types.ObjectId.isValid(req.params.addressId)) {
+        throw { code: 400, message: "INVALID_ADDRESS_ID" };
+      }
+
+      let field = {};
+      if (req.body.hasOwnProperty("details")) {
+        field["address.$[addressIndex].details"] = req.body.details;
+      }
+      if (req.body.hasOwnProperty("street")) {
+        field["address.$[addressIndex].street"] = req.body.street;
+      }
+      if (req.body.hasOwnProperty("city")) {
+        field["address.$[addressIndex].city"] = req.body.city;
+      }
+      if (req.body.hasOwnProperty("zipCode")) {
+        field["address.$[addressIndex].zipCode"] = req.body.zipCode;
+      }
+
+      const address = await User.findOneAndUpdate(
+        { _id: req.jwt.id },
+        { $set: field },
+        {
+          arrayFilters: [{ "addressIndex._id": req.params.addressId }],
+          new: true,
+        }
+      );
+
+      if (!address) {
+        throw { code: 404, message: "ADDRESS_NOT_FOUND" };
+      }
+
+      return res.status(200).json({
+        status: true,
+        message: "SUCCESS_UPDATE_ADDRESS",
+        address: address.address,
+      });
     } catch (error) {
       return res.status(error.code || 500).json({
         status: false,
@@ -156,7 +193,42 @@ class UserController {
   }
 
   async removeAddress(req, res) {
-    //
+    try {
+      isRequired(req.params.addressId);
+      if (!mongoose.Types.ObjectId.isValid(req.params.addressId)) {
+        throw { code: 400, message: "INVALID_ADDRESS_ID" };
+      }
+
+      const exists = await User.findOne({
+        _id: req.jwt.id,
+        "address._id": req.params.addressId,
+      });
+
+      if (!exists) {
+        throw { code: 404, message: "ADDRESS_NOT_FOUND" };
+      }
+
+      const address = await User.findOneAndUpdate(
+        { _id: req.jwt.id },
+        { $pull: { address: { _id: req.params.addressId } } },
+        { new: true }
+      );
+
+      if (!address) {
+        throw { code: 400, message: "ADDRESS_NOT_FOUND" };
+      }
+
+      return res.status(200).json({
+        status: false,
+        message: "SUCCESS_REMOVE_ADDRESS",
+        address: address.address,
+      });
+    } catch (error) {
+      return res.status(error.code || 500).json({
+        status: false,
+        message: error.message,
+      });
+    }
   }
 }
 
